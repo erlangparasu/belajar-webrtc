@@ -77,7 +77,7 @@ async function makeACall() {
         if (event.candidate) {
             callData.theOfferCandidates.push(event.candidate);
 
-            const jsonOfferCandidate = JSON.stringify(event.candidate)
+            const jsonOfferCandidate = JSON.stringify(event.candidate);
             $('#storage1').trigger('json_offer_candidate', [jsonOfferCandidate]);
         }
     }
@@ -131,7 +131,7 @@ async function answerByCallId(callId) {
         if (event.candidate) {
             callData.theAnswerCandidates.push(event.candidate);
 
-            const jsonAnswerCandidate = JSON.stringify(event.candidate)
+            const jsonAnswerCandidate = JSON.stringify(event.candidate);
             $('#storage1').trigger('json_answer_candidate', [jsonAnswerCandidate]);
         }
     }
@@ -148,6 +148,9 @@ async function answerByCallId(callId) {
         sdp: answerSDP.sdp,
     };
     callData.theAnswerSDP = answer;
+
+    const jsonAnswerSDP = JSON.stringify(answer);
+    $('#storage1').trigger('json_answer_sdp', [jsonAnswerSDP]);
 
     $('#storage1').on('json_offer_candidate', async function (event, jsonOfferCandidate) {
         console.log('json_offer_candidate', jsonOfferCandidate);
