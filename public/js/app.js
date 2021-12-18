@@ -20,7 +20,6 @@ let mRemoteStream = null;
 const mPeerConn = new RTCPeerConnection(rtcConfig);
 
 let storageCallDoc = {};
-let tmpLocalCandidates = [];
 
 async function initServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -78,12 +77,12 @@ async function makeACall() {
         if (event.candidate) {
             callData.theOfferCandidates.push(event.candidate);
 
-            let jsonOfferCandidate = JSON.stringify(event.candidate)
+            const jsonOfferCandidate = JSON.stringify(event.candidate)
             $('#storage1').trigger('json_offer_candidate', [jsonOfferCandidate]);
         }
     }
 
-    let offerSDP = await mPeerConn.createOffer();
+    const offerSDP = await mPeerConn.createOffer();
     await mPeerConn.setLocalDescription(offerSDP);
 
     const offer = {
@@ -97,7 +96,7 @@ async function makeACall() {
     $('#storage1').on('json_answer_sdp', async function (event, jsonAnswerSDP) {
         console.log('json_answer_sdp', callId, jsonAnswerSDP);
 
-        let answerSDP = JSON.parse(jsonAnswerSDP);
+        const answerSDP = JSON.parse(jsonAnswerSDP);
         try {
             await mPeerConn.setRemoteDescription(
                 new RTCSessionDescription(answerSDP)
@@ -132,7 +131,7 @@ async function answerByCallId(callId) {
         if (event.candidate) {
             callData.theAnswerCandidates.push(event.candidate);
 
-            let jsonAnswerCandidate = JSON.stringify(event.candidate)
+            const jsonAnswerCandidate = JSON.stringify(event.candidate)
             $('#storage1').trigger('json_answer_candidate', [jsonAnswerCandidate]);
         }
     }
@@ -145,8 +144,8 @@ async function answerByCallId(callId) {
     mPeerConn.setLocalDescription(answerSDP);
 
     const answer = {
-        type: answerDescription.type,
-        sdp: answerDescription.sdp,
+        type: answerSDP.type,
+        sdp: answerSDP.sdp,
     };
     callData.theAnswerSDP = answer;
 
@@ -166,7 +165,7 @@ async function answerByCallId(callId) {
 
 $(function () {
     $('#btnCall').on('click', function () {
-        let username = "user2";
+        const username = "user2";
 
         callByUsername(username).then(function success(data) {
             console.log('success', data);
@@ -176,7 +175,7 @@ $(function () {
     });
 
     $('#btnAnswer').on('click', function () {
-        let = $('#inputCallId').val();
+        const callId = $('#inputCallId').val();
 
         answerByCallId(callId).then(function success(data) {
             console.log('success', data);
