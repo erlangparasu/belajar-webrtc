@@ -101,7 +101,7 @@ async function makeACall() {
         try {
             await mPeerConn.setRemoteDescription(
                 new RTCSessionDescription(answerSDP)
-            ); // TODO: ??? await?
+            );
         } catch (err) {
             console.error('catch:', err);
         }
