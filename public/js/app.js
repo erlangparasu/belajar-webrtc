@@ -94,7 +94,7 @@ async function makeACall() {
     storageCallDoc[callData.id] = callData; // "random_id": Object
 
     $('#storage1').on('json_answer_sdp', async function (event, jsonAnswerSDP) {
-        console.log('json_answer_sdp', callId, jsonAnswerSDP);
+        console.log('json_answer_sdp', jsonAnswerSDP);
 
         const answerSDP = JSON.parse(jsonAnswerSDP);
         try {
