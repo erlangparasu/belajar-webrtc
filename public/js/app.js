@@ -141,16 +141,13 @@ async function answerByCallId(callId) {
     );
 
     const answerSDP = await mPeerConn.createAnswer();
-    mPeerConn.setLocalDescription(answerSDP);
+    await mPeerConn.setLocalDescription(answerSDP);
 
     const answer = {
         type: answerSDP.type,
         sdp: answerSDP.sdp,
     };
     callData.theAnswerSDP = answer;
-
-    const jsonAnswerSDP = JSON.stringify(answer);
-    $('#storage1').trigger('json_answer_sdp', [jsonAnswerSDP]);
 
     $('#storage1').on('json_offer_candidate', async function (event, jsonOfferCandidate) {
         console.log('json_offer_candidate', jsonOfferCandidate);
@@ -164,6 +161,9 @@ async function answerByCallId(callId) {
             console.error('catch:', err);
         }
     });
+
+    const jsonAnswerSDP = JSON.stringify(answer);
+    $('#storage1').trigger('json_answer_sdp', [jsonAnswerSDP]);
 }
 
 $(function () {
