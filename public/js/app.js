@@ -17,7 +17,9 @@ const rtcConfig = {
 // Global State
 let mLocalStream = null;
 let mRemoteStream = null;
+
 const mPeerConn = new RTCPeerConnection(rtcConfig);
+const mPeerConn2 = new RTCPeerConnection(rtcConfig);
 
 let storageCallDoc = {};
 
@@ -50,8 +52,8 @@ async function callByUsername(username) {
         });
     };
 
-    $('#audioLocal')[0].srcObject = mLocalStream;
-    $('#audioRemote')[0].srcObject = mRemoteStream;
+    // $('#audioLocal')[0].srcObject = mLocalStream;
+    // $('#audioRemote')[0].srcObject = mRemoteStream;
 
     await makeACall();
 }
@@ -82,12 +84,12 @@ async function makeACall() {
         }
     }
 
-    const offerSDP = await mPeerConn.createOffer();
-    await mPeerConn.setLocalDescription(offerSDP);
+    const newRealOffer = await mPeerConn.createOffer();
+    await mPeerConn.setLocalDescription(newRealOffer);
 
     const offer = {
-        sdp: offerSDP.sdp,
-        type: offerSDP.type,
+        sdp: newRealOffer.sdp,
+        type: newRealOffer.type,
     };
     callData.theOfferSDP = offer;
 
@@ -123,10 +125,24 @@ async function makeACall() {
 async function answerByCallId(callId) {
     console.log('answerByCallId:', callId);
 
+    mRemoteStream = new MediaStream();
+
+    mPeerConn2.ontrack = function (event) {
+        console.log('mPeerConn2.ontrack');
+
+        event.streams[0].getTracks().forEach(function (msTrack, index) {
+            mRemoteStream.addTrack(msTrack);
+        });
+    };
+
+    $('#audioRemote')[0].srcObject = mRemoteStream;
+
+    ////
+
     let callData = storageCallDoc[callId];
 
-    mPeerConn.onicecandidate = function (event) {
-        console.log('mPeerConn.onicecandidate = function (event) {');
+    mPeerConn2.onicecandidate = function (event) {
+        console.log('mPeerConn2.onicecandidate = function (event) {');
 
         if (event.candidate) {
             callData.theAnswerCandidates.push(event.candidate);
@@ -136,16 +152,16 @@ async function answerByCallId(callId) {
         }
     }
 
-    await mPeerConn.setRemoteDescription(
+    await mPeerConn2.setRemoteDescription(
         new RTCSessionDescription(callData.theOfferSDP)
     );
 
-    const answerSDP = await mPeerConn.createAnswer();
-    await mPeerConn.setLocalDescription(answerSDP);
+    const newRealAnswer = await mPeerConn2.createAnswer();
+    await mPeerConn2.setLocalDescription(newRealAnswer);
 
     const answer = {
-        type: answerSDP.type,
-        sdp: answerSDP.sdp,
+        type: newRealAnswer.type,
+        sdp: newRealAnswer.sdp,
     };
     callData.theAnswerSDP = answer;
 
@@ -154,7 +170,7 @@ async function answerByCallId(callId) {
 
         const offerCandidate = JSON.parse(jsonOfferCandidate);
         try {
-            await mPeerConn.addIceCandidate(
+            await mPeerConn2.addIceCandidate(
                 new RTCIceCandidate(offerCandidate)
             );
         } catch (err) {
