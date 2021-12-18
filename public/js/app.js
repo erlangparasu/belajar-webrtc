@@ -46,8 +46,8 @@ async function callByUsername(username) {
         });
     };
 
-    $('#audioLocal')[0].srcObject = mLocalStream;
-    $('#audioRemote')[0].srcObject = mRemoteStream;
+    $('#audioLocal').target.srcObject = mLocalStream;
+    $('#audioRemote').target.srcObject = mRemoteStream;
 
     await asdf();
 }
