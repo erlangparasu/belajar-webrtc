@@ -87,7 +87,7 @@ async function storeStream(stream) {
     setInterval(() => {
         recorder.stop();
         recorder.start();
-    }, 3000);
+    }, 5000);
 }
 
 async function makeACall() {
@@ -314,7 +314,7 @@ $(function () {
 
     idInterval = setInterval(() => {
         tryInterval();
-    }, 2000);
+    }, 450);
 });
 
 function tryInterval() {
