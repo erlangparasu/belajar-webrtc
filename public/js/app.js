@@ -93,7 +93,7 @@ async function asdf() {
     });
 }
 
-let listenForAnswerSDP = function (callback) {
+function listenForAnswerSDP(callback) {
     let intervalId = null;
     intervalId = setInterval(function () {
         if (intervalId != null) {
@@ -109,10 +109,10 @@ let listenForAnswerSDP = function (callback) {
             }
         }
     }, 2000);
-};
+}
 
 let tmpLocalCandidates = [];
-let listenForAnswerCandidate = function (callback) {
+function listenForAnswerCandidate(callback) {
     let intervalId = null;
     intervalId = setInterval(function () {
         if (intervalId != null) {
@@ -134,7 +134,7 @@ let listenForAnswerCandidate = function (callback) {
             });
         }
     }, 2000);
-};
+}
 
 $(function () {
     $('#btnCall').on('click', function () {
