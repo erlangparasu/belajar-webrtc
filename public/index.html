@@ -29,11 +29,11 @@
     <main>
         <nav>
             <h1>Belajar WebRTC PWA</h1>
-            <ul>
+            <!-- <ul>
                 <li>Home</li>
                 <li>About</li>
                 <li>Blog</li>
-            </ul>
+            </ul> -->
         </nav>
         <div class="container">
             <audio autoplay id="audioLocal"></audio>
@@ -41,8 +41,12 @@
 
             <span id="storage1"></span>
 
-            <h1>Local</h1>
             <!-- OUT -->
+            <h1>Local</h1>
+            <br>
+            <label for="inputMyCallId">My Call ID</label>
+            <input type="text" id="inputMyCallId">
+            <br>
             <button id="btnCall" class="mdc-button foo-button" type="button">
                 <div class="mdc-button__ripple"></div>
                 <span class="mdc-button__label">Call</span>
@@ -52,14 +56,17 @@
                 <span class="mdc-button__label">Hang Up</span>
             </button>
 
-            <h1>Remote</h1>
             <!-- IN -->
+            <h1>Remote</h1>
+            <br>
+            <label for="inputCallerId">Caller ID</label>
+            <input type="text" id="inputCallId">
+            <br>
             <button id="btnAnswer" class="mdc-button foo-button" type="button">
                 <div class="mdc-button__ripple"></div>
                 <span class="mdc-button__label">Answer</span>
             </button>
-
-            <input type="text" id="inputCallId">
+            <br>
             <button id="btnCall2" class="mdc-button foo-button" type="button">
                 <div class="mdc-button__ripple"></div>
                 <span class="mdc-button__label">Call</span>

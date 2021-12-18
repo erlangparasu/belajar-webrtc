@@ -61,7 +61,8 @@ async function callByUsername(username) {
 async function makeACall() {
     console.log('makeACall:');
 
-    const uuid = Math.random().toString(36).substr(2, 99);
+    // let uuid = Math.random().toString(36).substr(2, 99);
+    let uuid = $('#inputMyCallId').val();
 
     let callData = {
         id: uuid,
@@ -183,6 +184,9 @@ async function answerByCallId(callId) {
 }
 
 $(function () {
+    let uuid = Math.random().toString(36).substr(2, 99);
+    $('#inputMyCallId').val(uuid);
+
     $('#btnCall').on('click', function () {
         const username = "user2";
 
