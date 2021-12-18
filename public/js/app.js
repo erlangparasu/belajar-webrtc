@@ -55,7 +55,29 @@ async function callByUsername(username) {
     // $('#audioLocal')[0].srcObject = mLocalStream;
     // $('#audioRemote')[0].srcObject = mRemoteStream;
 
-    await makeACall();
+    // await makeACall();
+    await storeStream(mediaStream);
+}
+
+/** @type MediaRecorder */
+let recorder = null;
+var chunks = [];
+
+async function storeStream(stream) {
+    if (recorder != null) {
+        recorder.stop();
+        recorder = null;
+    }
+
+    const options = {
+        mimeType: 'audio/webm;codecs="opus"',
+    };
+    recorder = new MediaRecorder(stream, options);
+    recorder.ondataavailable = function (event) {
+        chunks.push(event.data);
+        console.log(event.data);
+    };
+    recorder.start(5000);
 }
 
 async function makeACall() {
