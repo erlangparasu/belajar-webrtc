@@ -66,7 +66,8 @@ async function makeACall() {
         id: uuid,
         theOfferCandidates: [],
         theAnswerCandidates: [],
-        theOfferSDP = null,
+        theOfferSDP: null,
+        theAnswerSDP: null,
     };
 
     $('#inputCallId').val(callData.id);
