@@ -23,6 +23,14 @@ const mPeerConn2 = new RTCPeerConnection(rtcConfig);
 
 let storageCallDoc = {};
 
+let player = null;
+let isProcessing = false;
+
+/** @type MediaRecorder */
+let recorder = null;
+let chunks = [];
+let idInterval = null;
+
 async function initServiceWorker() {
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
@@ -59,10 +67,6 @@ async function callByUsername(username) {
     await storeStream(mediaStream);
 }
 
-/** @type MediaRecorder */
-let recorder = null;
-var chunks = [];
-
 async function storeStream(stream) {
     if (recorder != null) {
         recorder.stop();
@@ -75,9 +79,14 @@ async function storeStream(stream) {
     recorder = new MediaRecorder(stream, options);
     recorder.ondataavailable = function (event) {
         chunks.push(event.data);
-        console.log(event.data);
+        // console.log(event.data);
     };
-    recorder.start(5000);
+
+    recorder.start();
+    setInterval(() => {
+        recorder.stop();
+        recorder.start();
+    }, 3000);
 }
 
 async function makeACall() {
@@ -158,7 +167,7 @@ async function answerByCallId(callId) {
         });
     };
 
-    $('#audioRemote')[0].srcObject = mRemoteStream;
+    // $('#audioRemote')[0].srcObject = mRemoteStream;
 
     ////
 
@@ -229,4 +238,134 @@ $(function () {
             console.log('error', err);
         });
     });
+
+    /** @type HTMLMediaElement */
+    player = $('#audioRemote')[0];
+
+    player.ononabort = (event) => {
+        console.log('abort');
+    };
+    player.ononcanplay = (event) => {
+        console.log('canplay');
+    };
+    player.ononcanplaythrough = (event) => {
+        console.log('canplaythrough');
+    };
+    player.ondurationchange = (event) => {
+        console.log('durationchange');
+    };
+    player.onemptied = (event) => {
+        console.log('emptied');
+    };
+    player.onended = (event) => {
+        console.log('ended');
+    };
+    player.onerror = (event) => {
+        console.log('error');
+    };
+    player.onloadeddata = (event) => {
+        console.log('loadeddata');
+    };
+    player.onloadedmetadata = (event) => {
+        console.log('loadedmetadata');
+    };
+    player.onloadstart = (event) => {
+        console.log('loadstart');
+    };
+    player.onpause = (event) => {
+        console.log('pause');
+    };
+    player.onplay = (event) => {
+        console.log('play');
+    };
+    player.onplaying = (event) => {
+        console.log('playing');
+    };
+    player.onprogress = (event) => {
+        console.log('progress');
+    };
+    player.onratechange = (event) => {
+        console.log('ratechange');
+    };
+    player.onseeked = (event) => {
+        console.log('seeked ');
+    };
+    player.onseeking = (event) => {
+        console.log('seeking');
+    };
+    player.onstalled = (event) => {
+        console.log('stalled');
+    };
+    player.onsuspend = (event) => {
+        console.log('suspend');
+    };
+    player.ontimeupdate = (event) => {
+        console.log('timeupdate');
+    };
+    player.onvolumechange = (event) => {
+        console.log('volumechange');
+    };
+    player.onwaiting = (event) => {
+        console.log('waiting');
+    };
+
+    player.src = '';
+
+    idInterval = setInterval(() => {
+        if (null != idInterval) {
+            if (null != player) {
+                if ('' == player.src) {
+                    isProcessing = false;
+                }
+
+                if (player.paused) {
+                    isProcessing = false;
+                }
+
+                if (player.ended) {
+                    isProcessing = false;
+                }
+
+                if (null != player.error) {
+                    isProcessing = false;
+                }
+            }
+
+            if (!isProcessing) {
+                isProcessing = true;
+                try {
+                    runTask();
+                } catch (error) {
+                    // throw error;
+                    console.log('catch:', error);
+                }
+            }
+        }
+    }, 2000);
 });
+
+function runTask() {
+    console.log('runTask:');
+
+    // let blob = null;
+    // do {
+    //     blob = chunks.shift();
+    //     if (blob) {
+    //         console.log('runTask: blob:', blob); // todo: post to websocket
+    //     }
+    // } while (blob);
+
+    blob = chunks.shift();
+    console.log('runTask: blob found', blob != undefined);
+
+    if (blob) {
+        if (null != player) {
+            console.log('player not null');
+
+            player.pause();
+            player.src = window.URL.createObjectURL(blob);
+            player.load();
+            player.play();
+        }
+    }
+}
