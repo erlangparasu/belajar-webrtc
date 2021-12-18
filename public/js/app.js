@@ -78,8 +78,9 @@ async function storeStream(stream) {
     };
     recorder = new MediaRecorder(stream, options);
     recorder.ondataavailable = function (event) {
-        chunks.push(event.data);
         // console.log(event.data);
+        chunks.push(event.data);
+        tryInterval();
     };
 
     recorder.start();
@@ -312,37 +313,41 @@ $(function () {
     player.src = '';
 
     idInterval = setInterval(() => {
-        if (null != idInterval) {
-            if (null != player) {
-                if ('' == player.src) {
-                    isProcessing = false;
-                }
-
-                if (player.paused) {
-                    isProcessing = false;
-                }
-
-                if (player.ended) {
-                    isProcessing = false;
-                }
-
-                if (null != player.error) {
-                    isProcessing = false;
-                }
-            }
-
-            if (!isProcessing) {
-                isProcessing = true;
-                try {
-                    runTask();
-                } catch (error) {
-                    // throw error;
-                    console.log('catch:', error);
-                }
-            }
-        }
+        tryInterval();
     }, 2000);
 });
+
+function tryInterval() {
+    if (null != idInterval) {
+        if (null != player) {
+            if ('' == player.src) {
+                isProcessing = false;
+            }
+
+            if (player.paused) {
+                isProcessing = false;
+            }
+
+            if (player.ended) {
+                isProcessing = false;
+            }
+
+            if (null != player.error) {
+                isProcessing = false;
+            }
+        }
+
+        if (!isProcessing) {
+            isProcessing = true;
+            try {
+                runTask();
+            } catch (error) {
+                // throw error;
+                console.log('catch:', error);
+            }
+        }
+    }
+}
 
 function runTask() {
     console.log('runTask:');
