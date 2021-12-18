@@ -64,6 +64,12 @@ async function asdf() {
 
         if (event.candidate) {
             storageCandidates.push(event.candidate);
+
+            $('#storage1').data('all_candidates', storageCandidates);
+            $('#storage1').trigger('here_new_candidate', [
+                JSON.stringify(storageCandidates),
+                JSON.stringify(event.candidate),
+            ]);
         }
     }
 
@@ -85,11 +91,17 @@ async function asdf() {
         }
     });
 
-    listenForAnswerCandidate(function (data) {
-        console.log('listenForAnswerCandidate(function (data) {');
+    $('#storage1').on('here_new_candidate', async function (event, jsonCandidates, jsonCandidate) {
+        console.log('here_new_candidate', jsonCandidate);
 
-        const candidate = new RTCIceCandidate(data.candidate);
-        mPeerConn.addIceCandidate(candidate);
+        const candidate = JSON.parse(jsonCandidate);
+        try {
+            await mPeerConn.addIceCandidate(
+                new RTCIceCandidate(candidate)
+            );
+        } catch (err) {
+            console.error('catch:', err);
+        }
     });
 }
 
@@ -108,7 +120,7 @@ function listenForAnswerSDP(callback) {
                 storageAnswerSDP = null;
             }
         }
-    }, 2000);
+    }, 1000 * 10);
 }
 
 let tmpLocalCandidates = [];
@@ -117,23 +129,28 @@ function listenForAnswerCandidate(callback) {
     intervalId = setInterval(function () {
         if (intervalId != null) {
             storageCandidates.forEach(function (storageCandidate) {
+                let isNew = true;
                 tmpLocalCandidates.forEach(function (localCandidate) {
-                    if (storageCandidate != localCandidate) {
-                        console.log('if (storageCandidate != localCandidate) {');
-
-                        tmpLocalCandidates.push(storageCandidate);
-
-                        let data = {
-                            candidate: JSON.parse(
-                                JSON.stringify(candidate)
-                            )
-                        };
-                        callback(data);
+                    if (storageCandidate == localCandidate) {
+                        isNew = false;
                     }
                 });
+
+                if (isNew) {
+                    console.log('isNew candidate');
+
+                    tmpLocalCandidates.push(storageCandidate);
+
+                    let data = {
+                        candidate: JSON.parse(
+                            JSON.stringify(storageCandidate)
+                        )
+                    };
+                    callback(data);
+                }
             });
         }
-    }, 2000);
+    }, 1000 * 10);
 }
 
 $(function () {
