@@ -122,74 +122,46 @@ async function makeACall() {
 }
 
 async function answerByCallId(callId) {
-    let mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+    console.log('answerByCallId:', callId);
 
-    mLocalStream = mediaStream;
-    mRemoteStream = new MediaStream();
+    let callData = storageCallDoc[callId];
 
-    mLocalStream.getTracks().forEach(function (msTrack, index) {
-        console.log('mLocalStream.getTracks().forEach(function (msTrack, index) {');
-        mPeerConn.addTrack(msTrack, mLocalStream);
-    });
+    mPeerConn.onicecandidate = function (event) {
+        console.log('mPeerConn.onicecandidate = function (event) {');
 
-    mPeerConn.ontrack = function (event) {
-        console.log('mPeerConn.ontrack = function (event) {');
-        event.streams[0].getTracks().forEach(function (msTrack, index) {
-            mRemoteStream.addTrack(msTrack);
-        });
+        if (event.candidate) {
+            callData.theAnswerCandidates.push(event.candidate);
+
+            let jsonAnswerCandidate = JSON.stringify(event.candidate)
+            $('#storage1').trigger('json_answer_candidate', [jsonAnswerCandidate]);
+        }
+    }
+
+    await mPeerConn.setRemoteDescription(
+        new RTCSessionDescription(callData.theOfferSDP)
+    );
+
+    const answerSDP = await mPeerConn.createAnswer();
+    mPeerConn.setLocalDescription(answerSDP);
+
+    const answer = {
+        type: answerDescription.type,
+        sdp: answerDescription.sdp,
     };
+    callData.theAnswerSDP = answer;
 
-    $('#audioLocal')[0].srcObject = mLocalStream;
-    $('#audioRemote')[0].srcObject = mRemoteStream;
+    $('#storage1').on('json_offer_candidate', async function (event, jsonOfferCandidate) {
+        console.log('json_offer_candidate', jsonOfferCandidate);
 
-    // await asdf();
-}
-
-function listenForAnswerSDP(callback) {
-    let intervalId = null;
-    intervalId = setInterval(function () {
-        if (intervalId != null) {
-            if (storageAnswerSDP != null) {
-                console.log('if (storageAnswerSDP != null) {');
-
-                let data = {
-                    answer: JSON.parse(storageAnswerSDP)
-                };
-                callback(data);
-
-                storageAnswerSDP = null;
-            }
+        const offerCandidate = JSON.parse(jsonOfferCandidate);
+        try {
+            await mPeerConn.addIceCandidate(
+                new RTCIceCandidate(offerCandidate)
+            );
+        } catch (err) {
+            console.error('catch:', err);
         }
-    }, 1000 * 10);
-}
-
-function listenForAnswerCandidate(callback) {
-    let intervalId = null;
-    intervalId = setInterval(function () {
-        if (intervalId != null) {
-            storageCandidates.forEach(function (storageCandidate) {
-                let isNew = true;
-                tmpLocalCandidates.forEach(function (localCandidate) {
-                    if (storageCandidate == localCandidate) {
-                        isNew = false;
-                    }
-                });
-
-                if (isNew) {
-                    console.log('isNew candidate');
-
-                    tmpLocalCandidates.push(storageCandidate);
-
-                    let data = {
-                        candidate: JSON.parse(
-                            JSON.stringify(storageCandidate)
-                        )
-                    };
-                    callback(data);
-                }
-            });
-        }
-    }, 1000 * 10);
+    });
 }
 
 $(function () {
@@ -204,7 +176,7 @@ $(function () {
     });
 
     $('#btnAnswer').on('click', function () {
-        let  = $('#inputCallId').val();
+        let = $('#inputCallId').val();
 
         answerByCallId(callId).then(function success(data) {
             console.log('success', data);
