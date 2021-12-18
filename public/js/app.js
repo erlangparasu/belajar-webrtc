@@ -194,6 +194,7 @@ $(function () {
             console.log('success', data);
         }, function error(err) {
             console.log('error', err);
+            alert('error', err);
         });
     });
 
