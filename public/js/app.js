@@ -1,3 +1,5 @@
+// app.js
+
 const constraints = {
     'video': false,
     'audio': true,
@@ -16,6 +18,9 @@ const rtcConfig = {
 let mLocalStream = null;
 let mRemoteStream = null;
 const mPeerConn = new RTCPeerConnection(rtcConfig);
+
+let storageCallDoc = {};
+let tmpLocalCandidates = [];
 
 async function initServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -46,30 +51,34 @@ async function callByUsername(username) {
         });
     };
 
-    $('#audioLocal').target.srcObject = mLocalStream;
-    $('#audioRemote').target.srcObject = mRemoteStream;
+    $('#audioLocal')[0].srcObject = mLocalStream;
+    $('#audioRemote')[0].srcObject = mRemoteStream;
 
-    await asdf();
+    await makeACall();
 }
 
-let storageCandidates = [];
-let storageCallDoc = {};
-let storageAnswerSDP = null; // json string
+async function makeACall() {
+    console.log('makeACall:');
 
-async function asdf() {
-    console.log('asdf:');
+    const uuid = Math.random().toString(36).substr(2, 99);
+
+    let callData = {
+        id: uuid,
+        theOfferCandidates: [],
+        theAnswerCandidates: [],
+        theOfferSDP = null,
+    };
+
+    $('#inputCallId').val(callData.id);
 
     mPeerConn.onicecandidate = function (event) {
         console.log('mPeerConn.onicecandidate = function (event) {');
 
         if (event.candidate) {
-            storageCandidates.push(event.candidate);
+            callData.theOfferCandidates.push(event.candidate);
 
-            $('#storage1').data('all_candidates', storageCandidates);
-            $('#storage1').trigger('here_new_candidate', [
-                JSON.stringify(storageCandidates),
-                JSON.stringify(event.candidate),
-            ]);
+            let jsonOfferCandidate = JSON.stringify(event.candidate)
+            $('#storage1').trigger('json_offer_candidate', [jsonOfferCandidate]);
         }
     }
 
@@ -80,29 +89,59 @@ async function asdf() {
         sdp: offerSDP.sdp,
         type: offerSDP.type,
     };
-    storageCallDoc = offer;
+    callData.theOfferSDP = offer;
 
-    listenForAnswerSDP(function (data) {
-        console.log('listenForAnswerSDP(function (data) {');
+    storageCallDoc[callData.id] = callData; // "random_id": Object
 
-        if (data.answer) {
-            const answerSDP = new RTCSessionDescription(data.answer);
-            mPeerConn.setRemoteDescription(answerSDP);
+    $('#storage1').on('json_answer_sdp', async function (event, jsonAnswerSDP) {
+        console.log('json_answer_sdp', callId, jsonAnswerSDP);
+
+        let answerSDP = JSON.parse(jsonAnswerSDP);
+        try {
+            await mPeerConn.setRemoteDescription(
+                new RTCSessionDescription(answerSDP)
+            ); // TODO: ??? await?
+        } catch (err) {
+            console.error('catch:', err);
         }
     });
 
-    $('#storage1').on('here_new_candidate', async function (event, jsonCandidates, jsonCandidate) {
-        console.log('here_new_candidate', jsonCandidate);
+    $('#storage1').on('json_answer_candidate', async function (event, jsonAnswerCandidate) {
+        console.log('json_answer_candidate', jsonAnswerCandidate);
 
-        const candidate = JSON.parse(jsonCandidate);
+        const answerCandidate = JSON.parse(jsonAnswerCandidate);
         try {
             await mPeerConn.addIceCandidate(
-                new RTCIceCandidate(candidate)
+                new RTCIceCandidate(answerCandidate)
             );
         } catch (err) {
             console.error('catch:', err);
         }
     });
+}
+
+async function answerByCallId(callId) {
+    let mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    mLocalStream = mediaStream;
+    mRemoteStream = new MediaStream();
+
+    mLocalStream.getTracks().forEach(function (msTrack, index) {
+        console.log('mLocalStream.getTracks().forEach(function (msTrack, index) {');
+        mPeerConn.addTrack(msTrack, mLocalStream);
+    });
+
+    mPeerConn.ontrack = function (event) {
+        console.log('mPeerConn.ontrack = function (event) {');
+        event.streams[0].getTracks().forEach(function (msTrack, index) {
+            mRemoteStream.addTrack(msTrack);
+        });
+    };
+
+    $('#audioLocal')[0].srcObject = mLocalStream;
+    $('#audioRemote')[0].srcObject = mRemoteStream;
+
+    // await asdf();
 }
 
 function listenForAnswerSDP(callback) {
@@ -123,7 +162,6 @@ function listenForAnswerSDP(callback) {
     }, 1000 * 10);
 }
 
-let tmpLocalCandidates = [];
 function listenForAnswerCandidate(callback) {
     let intervalId = null;
     intervalId = setInterval(function () {
@@ -158,6 +196,16 @@ $(function () {
         let username = "user2";
 
         callByUsername(username).then(function success(data) {
+            console.log('success', data);
+        }, function error(err) {
+            console.log('error', err);
+        });
+    });
+
+    $('#btnAnswer').on('click', function () {
+        let  = $('#inputCallId').val();
+
+        answerByCallId(callId).then(function success(data) {
             console.log('success', data);
         }, function error(err) {
             console.log('error', err);
